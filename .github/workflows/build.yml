@@ -1,0 +1,18 @@
+on: [push]
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with: { toolchain: stable }
+      - run: cargo build --release --workspace
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with: { toolchain: stable }
+      - run: cargo build --release --workspace
+      - run: cargo bundle --release --target x86_64-pc-windows-msvc
