@@ -19,15 +19,20 @@ pub struct Cli {
         long,
         short,
         value_parser = Self::parse_vid_pid, name = "VID>:<PID",
+        default_value = "0x1209:0x2444"
     )]
     device: (u16, u16),
+
+    /// target address to flash the firmware
+    #[clap(long, short, default_value = "0x08004000", value_parser = Self::parse_address)]
+    address: Option<u32>,
 
     /// Specify the DFU Interface number.
     #[clap(long, short, default_value = "0")]
     intf: u8,
 
     /// Specify the Altsetting of the DFU Interface by number.
-    #[clap(long, short, default_value = "0")]
+    #[clap(long, default_value = "0")]
     alt: u8,
 
     /// Reset after download.
@@ -41,10 +46,6 @@ pub struct Cli {
     #[clap(long)]
     /// print info and exit
     info: bool,
-
-    /// target address to flash the firmware
-    #[clap(long, default_value = "08004000", value_parser = Self::parse_address)]
-    address: Option<u32>,
 }
 
 impl Cli {
@@ -144,6 +145,12 @@ impl Cli {
         let (vid, pid) = s
             .split_once(':')
             .context("could not parse VID/PID (missing `:')")?;
+        // remove leading 0x if present
+        let vid = vid.strip_prefix("0x").unwrap_or(vid);
+        let pid = pid.strip_prefix("0x").unwrap_or(pid);
+        if vid.len() != 4 || pid.len() != 4 {
+            return Err(anyhow::anyhow!("VID/PID must be 4 digits each"));
+        }
         let vid = u16::from_str_radix(vid, 16).context("could not parse VID")?;
         let pid = u16::from_str_radix(pid, 16).context("could not parse PID")?;
 
@@ -151,6 +158,8 @@ impl Cli {
     }
 
     pub fn parse_address(s: &str) -> Result<u32> {
+        // remove leading 0x if present
+        let s = s.strip_prefix("0x").unwrap_or(s);
         let address = u32::from_str_radix(s, 16).context("could not parse address")?;
         Ok(address)
     }
