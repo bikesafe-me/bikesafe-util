@@ -1,9 +1,15 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
-use anyhow::Result;
+use std::fs::File;
+use std::io::Seek;
+use std::path::{Path, PathBuf};
+use std::sync::mpsc;
+use std::sync::mpsc::Receiver;
+use std::thread;
+
+use anyhow::{Context, Result};
+use dfu_libusb::*;
 use eframe::egui;
-use std::path::Path;
-use std::path::PathBuf;
 
 fn main() -> eframe::Result {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
@@ -16,22 +22,17 @@ fn main() -> eframe::Result {
         ..Default::default()
     };
     eframe::run_native(
-        "BikeSafe Firmware Update Util",
+        "BrakeBright Firmware Update Util",
         options,
         Box::new(|_cc| Ok(Box::new(MyApp::new()))),
     )
 }
 
-enum Message {
-    Progress(usize),
-    Error(String),
-    Finished,
-}
-
 #[derive(Default)]
 struct MyApp {
     picked_path: Option<PathBuf>,
-    progress: usize,
+    progress: f32,
+    receiver: Option<Receiver<f32>>,
     file_valid: Option<bool>,
     error: Option<String>,
 }
@@ -40,9 +41,10 @@ impl MyApp {
     fn new() -> Self {
         Self {
             picked_path: None,
-            progress: 0,
+            progress: 0.000001,
             file_valid: None,
             error: None,
+            receiver: None,
         }
     }
 }
@@ -50,10 +52,18 @@ impl MyApp {
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("BikeSafe Firmware Update Util");
-            if self.picked_path.is_none() {
-                ui.label("Select a firmware file to update your BikeSafe device.");
+            ui.heading("BrakeBright Firmware Update Util");
+
+            if let Some(path) = &self.picked_path {
+                let path_str = path.display().to_string();
+                ui.horizontal(|ui| {
+                    ui.label("Firmware Path:");
+                    ui.monospace(path_str);
+                });
+            } else {
+                ui.label("Select a firmware file to update your BrakeBright device.");
             }
+
             if let Some(error) = &self.error {
                 ui.label(error).highlight();
             }
@@ -64,6 +74,7 @@ impl eframe::App for MyApp {
                     .pick_file()
                 {
                     self.picked_path = Some(path);
+                    self.file_valid = None;
                 }
             }
 
@@ -87,21 +98,80 @@ impl eframe::App for MyApp {
                             Some("Invalid file type. Please select a .bin file.".to_string());
                     }
                 }
-                let path_str = path.display().to_string();
-                ui.horizontal(|ui| {
-                    ui.label("Firmware Path:");
-                    ui.monospace(path_str.clone());
-                });
 
                 if self.file_valid.unwrap_or(false) {
-                    if ui.button("Update firmware").clicked() {
-                        std::thread::spawn(move || {
-                            // Simulate a long-running task
-                            std::thread::sleep(std::time::Duration::from_secs(2));
-                            println!("Updating firmware from {}", path_str);
-                            // Here you would call the actual firmware update function
-                        });
+                    ui.label("------------------------------------------------------");
+                    // CLI logic adapted
+                    let vid = 0x1209;
+                    let pid = 0x2444;
+                    let intf = 0;
+                    let alt = 0;
+                    let context = rusb::Context::new().expect("Failed to create USB context");
+                    if DfuLibusb::open(&rusb::Context::new().unwrap(), 0x1209, 0x2444, 0, 0).is_ok()
+                    {
+                        if ui.button("Update firmware").clicked() {
+                            ui.label("Updating firmware...");
+                            let (tx, rx) = mpsc::channel();
+                            self.receiver = Some(rx);
+
+                            let path = path.clone();
+                            thread::spawn(move || {
+                                let mut device = DfuLibusb::open(&context, vid, pid, intf, alt)
+                                    .context("could not open device")
+                                    .unwrap();
+
+                                let mut file = File::open(&path)
+                                    .with_context(|| {
+                                        format!("could not open firmware file `{}`", path.display())
+                                    })
+                                    .unwrap();
+                                let file_size =
+                                    u32::try_from(file.seek(std::io::SeekFrom::End(0)).unwrap())
+                                        .context("The firmware file is too big")
+                                        .unwrap();
+                                file.seek(std::io::SeekFrom::Start(0)).unwrap();
+
+                                // Progress via DFU core
+                                device.with_progress({
+                                    let tx = tx.clone();
+                                    move |count| {
+                                        // count is bytes since last callback
+                                        let prog = count as f32 / file_size as f32;
+                                        let _ = tx.send(prog);
+                                    }
+                                });
+
+                                // Optionally override start address
+                                device.override_address(0x08004000);
+
+                                // Perform download
+                                match device.download(file, file_size) {
+                                    Ok(_) => (),
+                                    Err(e) => log::error!("Download error: {e:?}"),
+                                };
+                            });
+                        }
+                    } else {
+                        ui.label(
+                            "Please make sure the USB is connected and the device is in DFU mode.",
+                        );
+                        ctx.request_repaint_after(std::time::Duration::from_secs(1));
                     }
+
+                    if let Some(rx) = &self.receiver {
+                        for p in rx.try_iter() {
+                            self.progress += p;
+                        }
+                        log::error!("Progress: {}", self.progress);
+                        ui.add(egui::ProgressBar::new(self.progress).show_percentage());
+                        if self.progress >= 1.0 {
+                            ui.label("Flash complete!");
+                        } else {
+                            ctx.request_repaint();
+                        }
+                    }
+                } else {
+                    ui.label("Please select a valid firmware file.");
                 }
             } else {
                 ui.label("No firmware file selected.");
@@ -115,7 +185,6 @@ fn validate_firmware(path: &Path) -> Result<()> {
     const FLASH_LEN: u32 = 48 * 1024;
     const RAM_ORIGIN: u32 = 0x2000_0000 + 0x10;
     const RAM_LEN: u32 = 20 * 1024 - 0x10;
-    const KEY_STAY_IN_BOOT: u32 = 0xB0D4_2B89;
 
     let data = std::fs::read(path)?;
     let len = data.len() as u32;

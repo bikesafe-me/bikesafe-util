@@ -524,9 +524,13 @@ name = "bikesafe-util"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "dfu-core",
+ "dfu-libusb",
  "eframe",
  "env_logger",
+ "log",
  "rfd",
+ "rusb",
 ]
 
 [[package]]
