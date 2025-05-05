@@ -7,6 +7,16 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with: { toolchain: stable }
       - run: cargo build --release --workspace
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: linux-binaries
+          path: |
+            target/release/bikesafe-cli
+            target/release/dfu-packager
+            target/release/bikesafe-util
+          if-no-files-found: error
+          retention-days: 7
 
   build-windows:
     runs-on: windows-latest
@@ -15,4 +25,13 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with: { toolchain: stable }
       - run: cargo build --release --workspace
-      - run: cargo bundle --release --target x86_64-pc-windows-msvc
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows-binaries
+          path: |
+            target/release/bikesafe-cli.exe
+            target/release/dfu-packager.exe
+            target/release/bikesafe-util.exe
+          if-no-files-found: error
+          retention-days: 7

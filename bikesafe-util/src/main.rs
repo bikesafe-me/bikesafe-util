@@ -1,15 +1,16 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
 use std::fs::File;
-use std::io::Seek;
+use std::io::{self, Seek};
 use std::path::{Path, PathBuf};
 use std::sync::mpsc;
 use std::sync::mpsc::Receiver;
 use std::thread;
+use std::time::Duration;
 
 use anyhow::{Context, Result};
 use dfu_libusb::*;
-use eframe::egui;
+use eframe::egui::{self, ProgressBar};
 
 fn main() -> eframe::Result {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
@@ -28,6 +29,8 @@ fn main() -> eframe::Result {
     )
 }
 
+const PROGRESS_INIT: f32 = 0.000001; // avoid 0% progress bar
+
 #[derive(Default)]
 struct MyApp {
     picked_path: Option<PathBuf>,
@@ -41,7 +44,7 @@ impl MyApp {
     fn new() -> Self {
         Self {
             picked_path: None,
-            progress: 0.000001,
+            progress: PROGRESS_INIT,
             file_valid: None,
             error: None,
             receiver: None,
@@ -100,14 +103,14 @@ impl eframe::App for MyApp {
                 }
 
                 if self.file_valid.unwrap_or(false) {
-                    ui.label("------------------------------------------------------");
+                    ui.label("_____________________________________________________");
                     // CLI logic adapted
                     let vid = 0x1209;
                     let pid = 0x2444;
                     let intf = 0;
                     let alt = 0;
                     let context = rusb::Context::new().expect("Failed to create USB context");
-                    if DfuLibusb::open(&rusb::Context::new().unwrap(), 0x1209, 0x2444, 0, 0).is_ok()
+                    if DfuLibusb::open(&context, 0x1209, 0x2444, 0, 0).is_ok()
                     {
                         if ui.button("Update firmware").clicked() {
                             ui.label("Updating firmware...");
@@ -126,10 +129,10 @@ impl eframe::App for MyApp {
                                     })
                                     .unwrap();
                                 let file_size =
-                                    u32::try_from(file.seek(std::io::SeekFrom::End(0)).unwrap())
+                                    u32::try_from(file.seek(io::SeekFrom::End(0)).unwrap())
                                         .context("The firmware file is too big")
                                         .unwrap();
-                                file.seek(std::io::SeekFrom::Start(0)).unwrap();
+                                file.seek(io::SeekFrom::Start(0)).unwrap();
 
                                 // Progress via DFU core
                                 device.with_progress({
@@ -151,11 +154,11 @@ impl eframe::App for MyApp {
                                 };
                             });
                         }
-                    } else {
+                    } else if self.receiver.is_none() {
                         ui.label(
-                            "Please make sure the USB is connected and the device is in DFU mode.",
+                            "Please make sure the USB is connected and the device is in DFU mode. (LED blinking constantly)",
                         );
-                        ctx.request_repaint_after(std::time::Duration::from_secs(1));
+                        ctx.request_repaint_after(Duration::from_millis(100));
                     }
 
                     if let Some(rx) = &self.receiver {
@@ -163,9 +166,9 @@ impl eframe::App for MyApp {
                             self.progress += p;
                         }
                         log::error!("Progress: {}", self.progress);
-                        ui.add(egui::ProgressBar::new(self.progress).show_percentage());
+                        ui.add(ProgressBar::new(self.progress).show_percentage());
                         if self.progress >= 1.0 {
-                            ui.label("Flash complete!");
+                            ui.label("Flash complete! Please test the device function by tilting it.");
                         } else {
                             ctx.request_repaint();
                         }
