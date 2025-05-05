@@ -1,12 +1,11 @@
+use std::ffi::OsStr;
+use std::fs::File;
+use std::io::Write;
+use std::path::{Path, PathBuf};
+
 use anyhow::{Context, Result};
 use byteorder::{LittleEndian, WriteBytesExt};
 use crc32fast::Hasher;
-use std::ffi::OsStr;
-use std::fs::File;
-use std::{
-    io::Write,
-    path::{Path, PathBuf},
-};
 
 /// One contiguous image to flash at `address`.
 pub struct DfuElement {
@@ -38,7 +37,8 @@ impl DfuFile {
             for element in &target.elements {
                 // Element header: address + size (Little-Endian)
                 elements_data.write_u32::<LittleEndian>(element.address)?;
-                elements_data.write_u32::<LittleEndian>(element.data.len() as u32)?;
+                elements_data
+                    .write_u32::<LittleEndian>(element.data.len() as u32)?;
                 elements_data.extend(&element.data);
             }
             // Pad the target name to exactly 255 bytes
@@ -46,8 +46,8 @@ impl DfuFile {
             name_bytes.resize(255, 0);
 
             // Target prefix (per dfuse-pack.py):
-            // "Target" (6B), bAlternate (1B), dwNamed (4B), szTargetName (255B),
-            // dwTargetSize (4B), dwNbElements (4B)
+            // "Target" (6B), bAlternate (1B), dwNamed (4B), szTargetName
+            // (255B), dwTargetSize (4B), dwNbElements (4B)
             body.extend(b"Target");
             body.write_u8(target.alternate_setting)?; // bAlternate
             body.write_u32::<LittleEndian>(1)?; // dwNamed = 1 (name present)
@@ -69,7 +69,8 @@ impl DfuFile {
         dfu.write_u8(self.targets.len() as u8)?; // bTargets
         dfu.extend(&body);
 
-        // 3) DFU suffix (Little-Endian): bcdDevice, idProduct, idVendor, bcdDFU, "UFD", length
+        // 3) DFU suffix (Little-Endian): bcdDevice, idProduct, idVendor,
+        //    bcdDFU, "UFD", length
         dfu.write_u16::<LittleEndian>(0)?; // bcdDevice
         dfu.write_u16::<LittleEndian>(self.device_pid)?; // idProduct
         dfu.write_u16::<LittleEndian>(self.device_vid)?; // idVendor
@@ -153,7 +154,8 @@ impl Cli {
                 alternate_setting: 0,
                 elements: vec![DfuElement {
                     address,
-                    data: std::fs::read(file).context("Cannot read bin file")?,
+                    data: std::fs::read(file)
+                        .context("Cannot read bin file")?,
                 }],
             }],
         };
@@ -167,14 +169,17 @@ impl Cli {
         let (vid, pid) = s
             .split_once(':')
             .context("could not parse VID/PID (missing `:')")?;
-        let vid = u16::from_str_radix(vid, 16).context("could not parse VID")?;
-        let pid = u16::from_str_radix(pid, 16).context("could not parse PID")?;
+        let vid =
+            u16::from_str_radix(vid, 16).context("could not parse VID")?;
+        let pid =
+            u16::from_str_radix(pid, 16).context("could not parse PID")?;
 
         Ok((vid, pid))
     }
 
     pub fn parse_address(s: &str) -> Result<u32> {
-        let address = u32::from_str_radix(s, 16).context("could not parse address")?;
+        let address =
+            u32::from_str_radix(s, 16).context("could not parse address")?;
         Ok(address)
     }
 }

@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = [ "cli", "dfu-packager", "gui"]
+members = [ "bikesafe-cli", "dfu-packager", "bikesafe-util"]
 
 [profile.release]
 lto = true
