@@ -112,7 +112,7 @@ impl eframe::App for MyApp {
                     let context = rusb::Context::new().expect("Failed to create USB context");
                     if DfuLibusb::open(&context, 0x1209, 0x2444, 0, 0).is_ok()
                     {
-                        if ui.button("Update firmware").clicked() {
+                        if ui.button("Update Firmware").clicked() {
                             ui.label("Updating firmware...");
                             let (tx, rx) = mpsc::channel();
                             self.receiver = Some(rx);

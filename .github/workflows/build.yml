@@ -1,4 +1,9 @@
-on: [push]
+on:
+  push:
+    branches: ["*"]
+    tags:
+      - 'v*'
+
 jobs:
   build-linux:
     runs-on: ubuntu-latest
@@ -35,3 +40,34 @@ jobs:
             target/release/bikesafe-util.exe
           if-no-files-found: error
           retention-days: 7
+
+  create-release:
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-binaries
+          path: linux-binaries
+
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-binaries
+          path: windows-binaries
+
+      - name: Package binaries into release assets
+        run: |
+          mkdir -p release-assets
+          zip -r release-assets/bikesafe-util-linux.zip linux-binaries/
+          zip -r release-assets/bikesafe-util-windows.zip windows-binaries/
+
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            release-assets/*
+          fail_on_unmatched_files: true
+          generate_release_notes: true
