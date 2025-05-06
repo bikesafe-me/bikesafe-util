@@ -1,6 +1,12 @@
+
 [workspace]
 resolver = "3"
 members = [ "bikesafe-cli", "dfu-packager", "bikesafe-util"]
+
+[package]
+name = "bikesafe-util"
+version = "0.2.0"
+edition = "2024"
 
 [profile.release]
 lto = true
