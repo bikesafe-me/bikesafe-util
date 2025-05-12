@@ -13,6 +13,36 @@ A cross-platform firmware flashing utility for the Bikesafe DFU bootloader. Writ
 
 ## Installation
 
+## Pre-requisites
+
+- **Linux**: `libusb` (usually pre-installed)
+- **Windows**: [Zadig](https://zadig.akeo.ie/) to install the WinUSB driver
+- **macOS**: Not tested!
+
+## Entering Direct Firmware Update (DFU) Mode
+
+- Disconnect the device from the motorcycle, at least **temporarily disconnect red and blue wires**.
+- **USB-C**: Use a USB-C cable to connect the device to your PC.
+- **White/Yellow LED**: The white/yellow LED should be on, indicating power. If it’s not, check the USB cable and connection.
+- While the device is powered, press the **boot button** to enter DFU mode. The red LED will start blinking periodically, indicating that the device is in DFU mode and ready to receive firmware.
+- **Note**: The device need to be in **DFU Mode** to receive firmware or install drivers.
+
+### Windows
+
+1. Download and run [Zadig](https://zadig.akeo.ie/).
+2. Plug in your DFU device (see “Entering DFU Mode”), then in Zadig:
+
+   - Select **List All Devices** if necessary
+   - Choose `BrakeBright Bootloader` with USB ID `1209:2444`
+   - Select **WinUSB** (or **libusbK**) as the driver
+   - Click **Install Driver** (you need to do this **only once**)
+
+   ![Screenshot](screenshots/zadig.png)
+
+3. **Reboot** your PC if needed.
+
+4. Download the latest Bikesafe Utility `.zip` from the [Github Releases](https://github.com/mygnu/bikesafe-util/releases) page and extract.
+
 ### Linux
 
 1. Build or download the latest release from the [GitHub Releases](https://github.com/mygnu/bikesafe-util/releases).
@@ -29,29 +59,6 @@ A cross-platform firmware flashing utility for the Bikesafe DFU bootloader. Writ
    ```bash
    sudo udevadm control --reload && sudo udevadm trigger
    ```
-
-4. Plug in your device (see “Entering DFU Mode” below).
-
-### Windows
-
-1. Download and run [Zadig](https://zadig.akeo.ie/).
-2. Plug in your DFU device (see “Entering DFU Mode”), then in Zadig:
-
-   - Select **List All Devices** if necessary
-   - Choose `BrakeBright Bootloader` with USB ID `1209:2444`
-   - Select **WinUSB** (or **libusbK**) as the driver
-   - Click **Install Driver**
-
-   ![Screenshot](screenshots/zadig.png)
-
-3. Download the latest Bikesafe Utility `.zip` from the [Releases](https://github.com/mygnu/bikesafe-util/releases) page and extract.
-
-## Entering DFU Mode
-
-1. Remove the device from the motorcycle (or use a laptop).
-2. Connect via the USB-C port.
-3. Watch the **white/yellow LED** — when it’s on, press the **boot button**.
-4. The **red LED** will start blinking periodically. This indicates DFU mode is active and the device is ready to receive firmware.
 
 ## Usage
 
