@@ -69,21 +69,18 @@ impl Cli {
         let context = rusb::Context::new()?;
 
         let device: Dfu<rusb::Context> =
-            DfuLibusb::open(&context, vid, pid, intf, alt)
-                .context("could not open device")?;
+            DfuLibusb::open(&context, vid, pid, intf, alt).context("could not open device")?;
 
         println!("{:?}", device.into_inner().functional_descriptor());
         if info {
             return Ok(());
         }
         let mut device: Dfu<rusb::Context> =
-            DfuLibusb::open(&context, vid, pid, intf, alt)
-                .context("could not open device")?;
+            DfuLibusb::open(&context, vid, pid, intf, alt).context("could not open device")?;
 
         if let Some(path) = path {
-            let mut file = std::fs::File::open(&path).with_context(|| {
-                format!("could not open firmware file `{}`", path.display())
-            })?;
+            let mut file = std::fs::File::open(&path)
+                .with_context(|| format!("could not open firmware file `{}`", path.display()))?;
             let file_size = u32::try_from(file.seek(io::SeekFrom::End(0))?)
                 .context("The firmware file is too big")?;
             file.seek(io::SeekFrom::Start(0))?;
@@ -156,10 +153,8 @@ impl Cli {
         if vid.len() != 4 || pid.len() != 4 {
             return Err(anyhow::anyhow!("VID/PID must be 4 digits each"));
         }
-        let vid =
-            u16::from_str_radix(vid, 16).context("could not parse VID")?;
-        let pid =
-            u16::from_str_radix(pid, 16).context("could not parse PID")?;
+        let vid = u16::from_str_radix(vid, 16).context("could not parse VID")?;
+        let pid = u16::from_str_radix(pid, 16).context("could not parse PID")?;
 
         Ok((vid, pid))
     }
@@ -167,8 +162,7 @@ impl Cli {
     pub fn parse_address(s: &str) -> Result<u32> {
         // remove leading 0x if present
         let s = s.strip_prefix("0x").unwrap_or(s);
-        let address =
-            u32::from_str_radix(s, 16).context("could not parse address")?;
+        let address = u32::from_str_radix(s, 16).context("could not parse address")?;
         Ok(address)
     }
 }
