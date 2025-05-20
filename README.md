@@ -2,24 +2,24 @@
 
 ## Utility software for [BrakeBright](https://shop.bikesafe.me)
 
-A cross-platform firmware flashing utility for the Bikesafe DFU bootloader. Written in Rust with a GUI frontend (egui) and a CLI backend, this tool allows you to safely verify and download firmware images to your device via the USB DFU protocol.
+A cross-platform firmware flashing utility for the [BrakeBright](https://shop.bikesafe.me) DFU bootloader. Written in Rust with a GUI frontend (egui) and a CLI backend, this tool allows you to safely verify and download firmware images to your device via the USB DFU protocol.
 
 ## Features
 
-- **Cross-platform**: Windows & Linux support via `rusb` + WinUSB/libusb
+- **Cross-platform**: Windows & Linux support via `rusb` + `WinUSB/libusb`
 - **GUI & CLI**: egui-based desktop app plus a command-line interface
 - **Firmware validation**: file-size, vector-table, and embedded magic-key checks
 - **Progress reporting**: real-time progress bar, both in terminal and GUI
 
 ## Installation
 
-## Pre-requisites
+### Pre-requisites
 
 - **Linux**: `libusb` (usually pre-installed)
 - **Windows**: [Zadig](https://zadig.akeo.ie/) to install the WinUSB driver
 - **macOS**: Not tested!
 
-## Entering Direct Firmware Update (DFU) Mode
+### Entering Direct Firmware Update (DFU) Mode
 
 - Disconnect the device from the motorcycle, at least **temporarily disconnect red and blue wires**.
 - **USB-C**: Use a USB-C cable to connect the device to your PC.
@@ -30,9 +30,8 @@ A cross-platform firmware flashing utility for the Bikesafe DFU bootloader. Writ
 ### Windows
 
 1. Download and run [Zadig](https://zadig.akeo.ie/).
-2. Plug in your DFU device (see “Entering DFU Mode”), then in Zadig:
+2. Plug in your BrakeBright device (see “Entering DFU Mode” 👆), then in Zadig:
 
-   - Select **List All Devices** if necessary
    - Choose `BrakeBright Bootloader` with USB ID `1209:2444`
    - Select **WinUSB** (or **libusbK**) as the driver
    - Click **Install Driver** (you need to do this **only once**)
@@ -65,7 +64,7 @@ A cross-platform firmware flashing utility for the Bikesafe DFU bootloader. Writ
 ### GUI
 
 1. Launch the `bikesafe-util` executable.
-2. In the file picker, select `firmware.bin`.
+2. In the file picker, select `firmware_[version].bin`.
 3. Click **Update Firmware**.
 4. Monitor the progress bar.
 5. On success, the device will auto-exit DFU mode.
