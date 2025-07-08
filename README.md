@@ -32,11 +32,13 @@ A cross-platform firmware flashing utility for the [BrakeBright](https://shop.bi
 1. Download and run [Zadig](https://zadig.akeo.ie/).
 2. Plug in your BrakeBright device (see “Entering DFU Mode” 👆), then in Zadig:
 
-   - Choose `BrakeBright Bootloader` with USB ID `1209:2444`
-   - Select **WinUSB** (or **libusbK**) as the driver
-   - Click **Install Driver** (you need to do this **only once**)
+#### **Note:** if you have trouble finding the device, plug in the USB cable while holding the **boot button** on the BrakeBright device. This will ensure it is in DFU mode
 
-   ![Screenshot](screenshots/zadig.png)
+- Choose `BrakeBright Bootloader` with USB ID `1209:2444`
+- Select **WinUSB** (or **libusbK**) as the driver
+- Click **Install Driver** (you need to do this **only once**)
+
+![Screenshot](screenshots/zadig.png)
 
 3. **Reboot** your PC if needed.
 
