@@ -25,23 +25,20 @@ A cross-platform firmware flashing utility for the [BrakeBright](https://shop.bi
 - **USB-C**: Use a USB-C cable to connect the device to your PC.
 - **White/Yellow LED**: The white/yellow LED should be on, indicating power. If it’s not, check the USB cable and connection.
 - While the device is powered, press the **boot button** to enter DFU mode. The red LED will start blinking periodically, indicating that the device is in DFU mode and ready to receive firmware.
-- **Note**: The device need to be in **DFU Mode** to receive firmware or install drivers.
+
+### **Note:** The device need to be in **DFU Mode** to receive firmware or install drivers. If you have trouble finding the device in Zadig, plug in the USB cable while holding the **boot button** on the BrakeBright device. This will ensure it is in DFU mode
 
 ### Windows
 
 1. Download and run [Zadig](https://zadig.akeo.ie/).
 2. Plug in your BrakeBright device (see “Entering DFU Mode” 👆), then in Zadig:
 
-#### **Note:** if you have trouble finding the device, plug in the USB cable while holding the **boot button** on the BrakeBright device. This will ensure it is in DFU mode
-
-- Choose `BrakeBright Bootloader` with USB ID `1209:2444`
-- Select **WinUSB** (or **libusbK**) as the driver
-- Click **Install Driver** (you need to do this **only once**)
-
-![Screenshot](screenshots/zadig.png)
+   - Choose `BrakeBright Bootloader` with USB ID `1209:2444`
+   - Select **WinUSB** (or **libusbK**) as the driver
+   - Click **Install Driver** (you need to do this **only once**)
+     ![Screenshot](screenshots/zadig.png)
 
 3. **Reboot** your PC if needed.
-
 4. Download the latest Bikesafe Utility `.zip` from the [Github Releases](https://github.com/mygnu/bikesafe-util/releases) page and extract.
 
 ### Linux
