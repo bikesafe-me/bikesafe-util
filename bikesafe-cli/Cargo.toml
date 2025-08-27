@@ -8,7 +8,7 @@ anyhow = { workspace = true }
 clap = { workspace = true }
 dfu-core = { version = "0.7", features = ["std"] }
 dfu-libusb = { version = "0.5"}
-indicatif = "0.17"
+indicatif = "0.18"
 rusb = "0.9"
 simplelog = { workspace = true }
 thiserror = { workspace = true }
