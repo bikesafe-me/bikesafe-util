@@ -229,13 +229,5 @@ fn validate_firmware(path: &Path) -> Result<()> {
         len
     );
 
-    // // 2) KEY_STAY_IN_BOOT magic must appear in the blob
-    // let magic_bytes = KEY_STAY_IN_BOOT.to_le_bytes();
-    // anyhow::ensure!(
-    //     data.windows(4).any(|w| w == magic_bytes),
-    //     "Missing DFU stay-in-boot magic 0x{:08X} in firmware",
-    //     KEY_STAY_IN_BOOT
-    // );
-
     Ok(())
 }
