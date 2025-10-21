@@ -1,14 +1,17 @@
 [package]
 name = "bikesafe-util"
-version = "2.6.1"
+version = { workspace = true }
 edition = "2024"
 
 [dependencies]
-anyhow = "1.0"
-eframe ={ version = "0.32" }
-env_logger = { version = "0.11", default-features = false, features = ["auto-color", "humantime"] }
+anyhow = { workspace = true }
+eframe = { version = "0.33" }
+env_logger = { version = "0.11", default-features = false, features = [
+  "auto-color",
+  "humantime",
+] }
 rfd = "0.15"
 log = "0.4"
 dfu-core = { version = "0.7", features = ["std"] }
-dfu-libusb = { version = "0.5"}
+dfu-libusb = { version = "0.5" }
 rusb = "0.9"
