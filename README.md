@@ -22,9 +22,11 @@ A cross-platform firmware flashing utility for the [BrakeBright](https://shop.bi
 ### Entering Direct Firmware Update (DFU) Mode
 
 - Disconnect the device from the motorcycle, at least **temporarily disconnect red and blue wires**.
+- To open the box you will need 1.5mm hex key or screwdriver. Remove the 4 screws on the back of the case and gently pry it open.
 - **USB-C**: Use a USB-C cable to connect the device to your PC.
 - **White/Yellow LED**: The white/yellow LED should be on, indicating power. If it’s not, check the USB cable and connection.
 - While the device is powered, press the **boot button** to enter DFU mode. The red LED will start blinking periodically, indicating that the device is in DFU mode and ready to receive firmware.
+- **If you have trouble PC not recognizing the device, try holding the boot button while plugging in the USB cable**.
 
 ### **Note:** The device need to be in **DFU Mode** to receive firmware or install drivers. If you have trouble finding the device in Zadig, plug in the USB cable while holding the **boot button** on the BrakeBright device. This will ensure it is in DFU mode
 

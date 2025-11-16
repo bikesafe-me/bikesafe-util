@@ -12,6 +12,6 @@ env_logger = { version = "0.11", default-features = false, features = [
 ] }
 rfd = "0.15"
 log = "0.4"
-dfu-core = { version = "0.7", features = ["std"] }
+dfu-core = { version = "0.9", features = ["std"] }
 dfu-libusb = { version = "0.5" }
 rusb = "0.9"
