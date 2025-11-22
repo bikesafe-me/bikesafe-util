@@ -76,10 +76,10 @@ A cross-platform firmware flashing utility for the [BrakeBright](https://shop.bi
 
 ```bash
 # Show help
-bikesafe-util --help
+bikesafe-cli --help
 
 # Flash firmware via CLI
-bikesafe-util \
+bikesafe-cli \
   --device 1209:2444 \
   --path firmware.bin \
   --reset
