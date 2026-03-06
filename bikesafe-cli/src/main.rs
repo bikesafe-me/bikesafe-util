@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 use dfu_core::DfuIo; /* Import the Dfu trait to bring
- * functional_descriptor into scope */
+                       * functional_descriptor into scope */
 use dfu_libusb::*;
 
 #[derive(clap::Parser)]
