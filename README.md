@@ -28,6 +28,18 @@ A cross-platform firmware flashing utility for the [BrakeBright](https://shop.bi
 - While the device is powered, press the **boot button** to enter DFU mode. The red LED will start blinking periodically (you may be able to proceed if it doesn't flash), indicating that the device is in DFU mode and ready to receive firmware.
 - **If you have trouble PC not recognizing the device, try holding the boot button while plugging in the USB cable**.
 
+#### DFU Button Troubleshooting (Jammed/Insulated Button)
+
+Sometimes conformal coating can insulate the DFU button contact.
+
+Workaround:
+
+1. Keep the device powered over USB.
+2. Use a fine needle to bridge/ground the button pin to the metal button body.
+3. Do this while plugging in USB or while attempting to enter DFU mode.
+
+![Jammed DFU button workaround](screenshots/jammed-button.png)
+
 ### **Note:** The device need to be in **DFU Mode** to receive firmware or install drivers. If you have trouble finding the device in Zadig, plug in the USB cable while holding the **boot button** on the BrakeBright device. This will ensure it is in DFU mode
 
 ### Windows
