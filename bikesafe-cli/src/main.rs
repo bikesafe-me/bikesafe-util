@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 use dfu_core::DfuIo; /* Import the Dfu trait to bring
-                       * functional_descriptor into scope */
+ * functional_descriptor into scope */
 use dfu_libusb::*;
 
 #[derive(clap::Parser)]
@@ -110,7 +110,14 @@ impl Cli {
             }
 
             match device.download(file, file_size) {
-                Ok(_) => (),
+                Ok(Some(d)) => {
+                    device = d;
+                }
+                Ok(None) => {
+                    // Device performed a USB reset itself after download
+                    println!("Download successful; Device reset itself");
+                    return Ok(());
+                }
                 Err(Error::LibUsb(e)) => {
                     if bar.is_finished() {
                         // Some devices reset themselves after a successful
@@ -124,8 +131,8 @@ impl Cli {
                     }
                     return Ok(());
                 }
-                e => {
-                    return e.context("could not write firmware to the device");
+                Err(e) => {
+                    return Err(e).context("could not write firmware to the device");
                 }
             }
         }

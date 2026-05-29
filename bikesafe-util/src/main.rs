@@ -53,133 +53,128 @@ impl MyApp {
 }
 
 impl eframe::App for MyApp {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("BrakeBright Firmware Update Util");
+    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        ui.heading("BrakeBright Firmware Update Util");
 
-            if let Some(path) = &self.picked_path {
-                let path_str = path.display().to_string();
-                ui.horizontal(|ui| {
-                    ui.label("Firmware Path:");
-                    ui.monospace(path_str);
-                });
-            } else {
-                ui.label("Select a firmware file to update your BrakeBright device.");
+        if let Some(path) = &self.picked_path {
+            let path_str = path.display().to_string();
+            ui.horizontal(|ui| {
+                ui.label("Firmware Path:");
+                ui.monospace(path_str);
+            });
+        } else {
+            ui.label("Select a firmware file to update your BrakeBright device.");
+        }
+
+        if let Some(error) = &self.error {
+            ui.label(error).highlight();
+        }
+
+        if ui.button("Open file…").clicked() {
+            if let Some(path) = rfd::FileDialog::new()
+                .add_filter("firmware", &["bin"])
+                .pick_file()
+            {
+                self.picked_path = Some(path);
+                self.file_valid = None;
             }
+        }
 
-            if let Some(error) = &self.error {
-                ui.label(error).highlight();
-            }
-
-            if ui.button("Open file…").clicked() {
-                if let Some(path) = rfd::FileDialog::new()
-                    .add_filter("firmware", &["bin"])
-                    .pick_file()
-                {
-                    self.picked_path = Some(path);
-                    self.file_valid = None;
-                }
-            }
-
-            if let Some(path) = &self.picked_path {
-                if self.file_valid.is_none() {
-                    // Check if the file is valid (e.g., check the extension)
-                    if path.extension().and_then(|s| s.to_str()) == Some("bin") {
-                        match validate_firmware(path) {
-                            Ok(_) => {
-                                self.file_valid = Some(true);
-                                self.error = None;
-                            }
-                            Err(e) => {
-                                self.file_valid = Some(false);
-                                self.error = Some(format!("Invalid firmware file: {}", e));
-                            }
+        if let Some(path) = &self.picked_path {
+            if self.file_valid.is_none() {
+                // Check if the file is valid (e.g., check the extension)
+                if path.extension().and_then(|s| s.to_str()) == Some("bin") {
+                    match validate_firmware(path) {
+                        Ok(_) => {
+                            self.file_valid = Some(true);
+                            self.error = None;
                         }
-                    } else {
-                        self.file_valid = Some(false);
-                        self.error =
-                            Some("Invalid file type. Please select a .bin file.".to_string());
-                    }
-                }
-
-                if self.file_valid.unwrap_or(false) {
-                    ui.label("_____________________________________________________");
-                    // CLI logic adapted
-                    let vid = 0x1209;
-                    let pid = 0x2444;
-                    let intf = 0;
-                    let alt = 0;
-                    let context = rusb::Context::new().expect("Failed to create USB context");
-                    if DfuLibusb::open(&context, 0x1209, 0x2444, 0, 0).is_ok()
-                    {
-                        if ui.button("Update Firmware").clicked() {
-                            ui.label("Updating firmware...");
-                            let (tx, rx) = mpsc::channel();
-                            self.receiver = Some(rx);
-
-                            let path = path.clone();
-                            thread::spawn(move || {
-                                let mut device = DfuLibusb::open(&context, vid, pid, intf, alt)
-                                    .context("could not open device")
-                                    .unwrap();
-
-                                let mut file = File::open(&path)
-                                    .with_context(|| {
-                                        format!("could not open firmware file `{}`", path.display())
-                                    })
-                                    .unwrap();
-                                let file_size =
-                                    u32::try_from(file.seek(io::SeekFrom::End(0)).unwrap())
-                                        .context("The firmware file is too big")
-                                        .unwrap();
-                                file.seek(io::SeekFrom::Start(0)).unwrap();
-
-                                // Progress via DFU core
-                                device.with_progress({
-                                    let tx = tx.clone();
-                                    move |count| {
-                                        // count is bytes since last callback
-                                        let prog = count as f32 / file_size as f32;
-                                        let _ = tx.send(prog);
-                                    }
-                                });
-
-                                // Optionally override start address
-                                device.override_address(0x08004000);
-
-                                // Perform download
-                                match device.download(file, file_size) {
-                                    Ok(_) => (),
-                                    Err(e) => log::error!("Download error: {e:?}"),
-                                };
-                            });
-                        }
-                    } else if self.receiver.is_none() {
-                        ui.label(
-                            "Please make sure the USB is connected and the device is in DFU mode. (LED blinking constantly)",
-                        );
-                        ctx.request_repaint_after(Duration::from_millis(100));
-                    }
-
-                    if let Some(rx) = &self.receiver {
-                        for p in rx.try_iter() {
-                            self.progress += p;
-                        }
-                        log::error!("Progress: {}", self.progress);
-                        ui.add(ProgressBar::new(self.progress).show_percentage());
-                        if self.progress >= 1.0 {
-                            ui.label("Flash complete! Please test the device function by tilting it.");
-                        } else {
-                            ctx.request_repaint();
+                        Err(e) => {
+                            self.file_valid = Some(false);
+                            self.error = Some(format!("Invalid firmware file: {}", e));
                         }
                     }
                 } else {
-                    ui.label("Please select a valid firmware file.");
+                    self.file_valid = Some(false);
+                    self.error = Some("Invalid file type. Please select a .bin file.".to_string());
+                }
+            }
+
+            if self.file_valid.unwrap_or(false) {
+                ui.label("_____________________________________________________");
+                // CLI logic adapted
+                let vid = 0x1209;
+                let pid = 0x2444;
+                let intf = 0;
+                let alt = 0;
+                let context = rusb::Context::new().expect("Failed to create USB context");
+                if DfuLibusb::open(&context, 0x1209, 0x2444, 0, 0).is_ok() {
+                    if ui.button("Update Firmware").clicked() {
+                        ui.label("Updating firmware...");
+                        let (tx, rx) = mpsc::channel();
+                        self.receiver = Some(rx);
+
+                        let path = path.clone();
+                        thread::spawn(move || {
+                            let mut device = DfuLibusb::open(&context, vid, pid, intf, alt)
+                                .context("could not open device")
+                                .unwrap();
+
+                            let mut file = File::open(&path)
+                                .with_context(|| {
+                                    format!("could not open firmware file `{}`", path.display())
+                                })
+                                .unwrap();
+                            let file_size = u32::try_from(file.seek(io::SeekFrom::End(0)).unwrap())
+                                .context("The firmware file is too big")
+                                .unwrap();
+                            file.seek(io::SeekFrom::Start(0)).unwrap();
+
+                            // Progress via DFU core
+                            device.with_progress({
+                                let tx = tx.clone();
+                                move |count| {
+                                    // count is bytes since last callback
+                                    let prog = count as f32 / file_size as f32;
+                                    let _ = tx.send(prog);
+                                }
+                            });
+
+                            // Optionally override start address
+                            device.override_address(0x08004000);
+
+                            // Perform download
+                            match device.download(file, file_size) {
+                                Ok(_) => (),
+                                Err(e) => log::error!("Download error: {e:?}"),
+                            };
+                        });
+                    }
+                } else if self.receiver.is_none() {
+                    ui.label(
+                            "Please make sure the USB is connected and the device is in DFU mode. (LED blinking constantly)",
+                        );
+                    ui.ctx().request_repaint_after(Duration::from_millis(100));
+                }
+
+                if let Some(rx) = &self.receiver {
+                    for p in rx.try_iter() {
+                        self.progress += p;
+                    }
+                    log::error!("Progress: {}", self.progress);
+                    ui.add(ProgressBar::new(self.progress).show_percentage());
+                    if self.progress >= 1.0 {
+                        ui.label("Flash complete! Please test the device function by tilting it.");
+                    } else {
+                        ui.ctx().request_repaint();
+                    }
                 }
             } else {
-                ui.label("No firmware file selected.");
+                ui.label("Please select a valid firmware file.");
             }
-        });
+        } else {
+            ui.label("No firmware file selected.");
+        }
     }
 }
 

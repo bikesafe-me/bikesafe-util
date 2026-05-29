@@ -6,8 +6,8 @@ edition = "2024"
 [dependencies]
 anyhow = { workspace = true }
 clap = { workspace = true }
-dfu-core = { version = "0.9", features = ["std"] }
-dfu-libusb = { version = "0.5" }
+dfu-core = { version = "0.11", features = ["std"] }
+dfu-libusb = { version = "0.6" }
 indicatif = "0.18"
 rusb = "0.9"
 simplelog = { workspace = true }
