@@ -1,43 +1,56 @@
+name: Build
+
 on:
   push:
     branches: ["*"]
     tags:
-      - 'v*'
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-linux:
+    # ubuntu-22.04 (oldest supported runner) keeps the glibc requirement of
+    # the release binaries low, so they run on older distros too.
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1
-        with: { toolchain: stable }
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
       - run: cargo build --release --workspace
       - name: Upload Linux artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: linux-binaries
           path: |
             target/release/bikesafe-cli
             target/release/dfu-packager
             target/release/bikesafe-util
+            target/release/bikesafe-eframe
           if-no-files-found: error
           retention-days: 7
 
   build-windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1
-        with: { toolchain: stable }
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
       - run: cargo build --release --workspace
       - name: Upload Windows artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: windows-binaries
           path: |
             target/release/bikesafe-cli.exe
             target/release/dfu-packager.exe
             target/release/bikesafe-util.exe
+            target/release/bikesafe-eframe.exe
           if-no-files-found: error
           retention-days: 7
 
@@ -50,13 +63,13 @@ jobs:
 
     steps:
       - name: Download Linux artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: linux-binaries
           path: linux-binaries
 
       - name: Download Windows artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: windows-binaries
           path: windows-binaries
@@ -68,7 +81,7 @@ jobs:
           zip -r release-assets/bikesafe-util-windows.zip windows-binaries/
 
       - name: Create release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           files: |
             release-assets/*

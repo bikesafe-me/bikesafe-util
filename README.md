@@ -1,13 +1,13 @@
 # bikesafe-util
 
-## Utility software for [BrakeBright](https://shop.bikesafe.me)
+## Utility software for [BrakeBright](https://bikesafe.me)
 
-A cross-platform firmware flashing utility for the [BrakeBright](https://shop.bikesafe.me) DFU bootloader. Written in Rust with a GUI frontend (egui) and a CLI backend, this tool allows you to safely verify and download firmware images to your device via the USB DFU protocol.
+A cross-platform firmware flashing utility for the [BrakeBright](https://bikesafe.me) DFU bootloader. Written in Rust with a GUI frontend and a CLI backend, this tool allows you to safely verify and download firmware images to your device via the USB DFU protocol.
 
 ## Features
 
 - **Cross-platform**: Windows & Linux support via `rusb` + `WinUSB/libusb`
-- **GUI & CLI**: egui-based desktop app plus a command-line interface
+- **GUI & CLI**: desktop app plus a command-line interface
 - **Firmware validation**: file-size, vector-table, and embedded magic-key checks
 - **Progress reporting**: real-time progress bar, both in terminal and GUI
 
